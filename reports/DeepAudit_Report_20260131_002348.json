@@ -1,0 +1,22 @@
+{
+    "project": "DeepAudit",
+    "timestamp": "2026-01-31T00:23:48.202084",
+    "data": {
+        "performance_metrics": {
+            "threshold": 0.4,
+            "FAR": 0.0,
+            "FRR": 0.0,
+            "HTER": 0.0,
+            "EER": 0.0,
+            "EER_threshold": 0.393939393939394,
+            "genuine_count": 3,
+            "impostor_count": 50,
+            "genuine_min": 0.8242188206975948,
+            "genuine_max": 0.8942525378157018,
+            "genuine_mean": 0.858018851299081,
+            "impostor_min": 0.0008147427958503872,
+            "impostor_max": 0.3855329936080549,
+            "impostor_mean": 0.22421063673272448
+        }
+    }
+}
