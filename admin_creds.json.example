@@ -1,0 +1,4 @@
+{
+  "username": "admin",
+  "password_hash": "<PUT_SHA256_HASH_OF_PASSWORD_HERE>"
+}
