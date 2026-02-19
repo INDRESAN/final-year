@@ -1,0 +1,127 @@
+# ⚡ Quick Start - Copy & Paste Commands
+
+Run these commands exactly. Open 2 terminals side by side.
+
+---
+
+## 🖥️ Terminal 1: Backend
+
+Copy and paste each line:
+
+```bash
+cd "D:\projects\FINAL YEAR\Final_year_project"
+pip install -r requirements-api.txt
+python app.py
+```
+
+**Wait for output:**
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
+
+✅ **Keep this terminal OPEN**
+
+---
+
+## 🌐 Terminal 2: Frontend
+
+Copy and paste each line:
+
+```bash
+cd "D:\projects\FINAL YEAR\frontend"
+npm install
+npm run dev
+```
+
+**Wait for output:**
+```
+➜  Local:   http://localhost:3000/
+```
+
+✅ **Keep this terminal OPEN**
+
+---
+
+## 🎯 Open in Browser
+
+Visit: **http://localhost:3000**
+
+---
+
+## 🔑 Login Credentials
+
+- Username: `admin`
+- Password: `admin123`
+
+---
+
+## 📱 What You Can Do
+
+1. **Verify Face** - Point camera at yourself
+2. **Enroll User** - Add new user with face
+3. **Manage Users** - View & delete users
+
+---
+
+## ❌ If Something Goes Wrong
+
+### Backend won't start?
+```bash
+# Reinstall Python packages
+pip install -r requirements-api.txt --force-reinstall
+```
+
+### Frontend won't start?
+```bash
+# Clear and reinstall
+rm -r node_modules package-lock.json
+npm install
+```
+
+### Port already in use?
+```bash
+# Kill process on port 8000
+taskkill /PID <number> /F
+
+# Or use different port in app.py
+python app.py --port 8001
+```
+
+### Camera not working?
+- Allow camera permission in browser
+- Restart browser
+- Try Chrome or Firefox
+
+---
+
+## 🔍 Verify Everything Works
+
+1. Open browser: http://localhost:3000
+2. Should see login page
+3. Login with admin/admin123
+4. Should see dashboard with 3 tabs
+5. Try face verification (needs camera)
+
+---
+
+## 🛑 How to Stop
+
+In each terminal: **Press Ctrl+C**
+
+That's it! Everything shuts down cleanly.
+
+---
+
+## 📁 File Locations
+
+| What | Where |
+|------|-------|
+| Frontend | `D:\projects\FINAL YEAR\frontend` |
+| Backend | `D:\projects\FINAL YEAR\Final_year_project` |
+| Setup Guide | `D:\projects\FINAL YEAR\SETUP_GUIDE.md` |
+
+---
+
+**Need help?** Read `SETUP_GUIDE.md` for detailed instructions.
+
+**Everything working?** 🎉 Congratulations!
