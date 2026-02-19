@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+.venv/
+venv/
+ENV/
+
+# Byte-compiled / optimized / DLL files
+*.so
+*.egg
+*.egg-info/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database, embeddings and backups (sensitive / large)
+db.npy
+clean_db.npy
+db_backup_*.npy
+clean_db_backup_*.npy
+*.h5
+
+# Face images (privacy)
+faces/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Secrets / env
+.env
+.env.local
+admin_creds.json
+
+# Reports and heavy artifacts (optional)
+reports/*.json
+reports/*.zip
