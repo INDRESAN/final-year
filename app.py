@@ -9,7 +9,8 @@ from deepface import DeepFace
 from database import (
     load_db, save_db, load_clean_db, save_clean_db,
     verify_admin, change_admin_password,
-    is_enrollment_locked, lock_enrollment, unlock_enrollment
+    is_enrollment_locked, lock_enrollment, unlock_enrollment,
+    init_user_metadata, update_user_metadata, load_metadata
 )
 from watermark import watermark_mgr
 import os
@@ -62,8 +63,13 @@ class VerificationResponse(BaseModel):
     similarity_score: Optional[float] = None
     data_integrity: Optional[bool] = None
 
+class UserResponseModel(BaseModel):
+    username: str
+    attendance: int
+    blocked: bool
+
 class UserListResponse(BaseModel):
-    users: list
+    users: list[UserResponseModel]
     total_count: int
 
 class EnrollmentStatusResponse(BaseModel):
@@ -184,6 +190,9 @@ async def enroll_user(request: EnrollmentRequest):
             save_db(db, trusted=False)  # Save watermarked version
             save_clean_db(clean_db)     # Save clean version
             
+            # Initialize attendance metadata
+            init_user_metadata(request.username)
+            
             return {
                 "success": True,
                 "message": f"User '{request.username}' enrolled successfully",
@@ -262,6 +271,23 @@ async def verify_face(request: VerificationRequest):
             # Verify threshold - use 0.55 for ArcFace (strict matching)
             # Also require second-best to be significantly lower
             if best_score > 0.55:
+                # Update attendance/status
+                today_str = datetime.now().strftime("%Y-%m-%d")
+                metadata = load_metadata()
+                user_info = metadata.get(best_match, {})
+                is_blocked = user_info.get("blocked", False)
+
+                if not best_is_clean:
+                    # Tampered! Block the user
+                    update_user_metadata(best_match, {"blocked": True})
+                    print(f"[DEBUG VERIFY] '{best_match}' tampered. Blocked.")
+                elif not is_blocked:
+                    # Successfully verified and not blocked, update date
+                    update_user_metadata(best_match, {"last_verified_date": today_str})
+                    print(f"[DEBUG VERIFY] '{best_match}' verified successfully for {today_str}.")
+                else:
+                    print(f"[DEBUG VERIFY] '{best_match}' verified, but is BLOCKED.")
+
                 print(f"[DEBUG VERIFY] RETURNING MATCH: {best_match}, score={best_score:.4f}, integrity={best_is_clean}")
                 return VerificationResponse(
                     success=True,
@@ -293,8 +319,19 @@ async def get_users():
     try:
         db = load_db()
         users = list(db.keys())
+        metadata = load_metadata()
+        
+        user_list = []
+        for u in users:
+            info = metadata.get(u, {})
+            user_list.append({
+                "username": u,
+                "attendance": info.get("attendance", 100),
+                "blocked": info.get("blocked", False)
+            })
+            
         return UserListResponse(
-            users=users,
+            users=user_list,
             total_count=len(users)
         )
     except Exception as e:
@@ -316,9 +353,41 @@ async def delete_user(username: str):
         
         save_db(db)
         
+        # Remove metadata
+        metadata = load_metadata()
+        if username in metadata:
+            del metadata[username]
+            from database import save_metadata
+            save_metadata(metadata)
+        
         return {"success": True, "message": f"User '{username}' deleted"}
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/attendance/deduct")
+async def deduct_attendance():
+    """Deduct 2% from all users who haven't verified today and aren't blocked"""
+    try:
+        metadata = load_metadata()
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        updated_count = 0
+        
+        for user, info in metadata.items():
+            if info.get("blocked", False):
+                continue
+                
+            if info.get("last_verified_date") != today_str:
+                current_attendance = info.get("attendance", 100)
+                new_attendance = max(0, current_attendance - 2)
+                
+                # Only update if it actually changed to save writes potentially
+                if new_attendance != current_attendance:
+                    update_user_metadata(user, {"attendance": new_attendance})
+                    updated_count += 1
+                    
+        return {"success": True, "message": f"Deducted attendance for {updated_count} users"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

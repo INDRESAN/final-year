@@ -1,0 +1,17 @@
+{
+    "alice": {
+        "attendance": 100,
+        "blocked": false,
+        "last_verified_date": "2026-03-09"
+    },
+    "bob": {
+        "attendance": 96,
+        "blocked": false,
+        "last_verified_date": null
+    },
+    "charlie": {
+        "attendance": 100,
+        "blocked": true,
+        "last_verified_date": null
+    }
+}

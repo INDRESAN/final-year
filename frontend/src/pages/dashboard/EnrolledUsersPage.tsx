@@ -10,6 +10,8 @@ import api from "@/api/client";
 
 interface User {
     username: string;
+    attendance: number;
+    blocked: boolean;
 }
 
 const EnrolledUsersPage = () => {
@@ -17,6 +19,7 @@ const EnrolledUsersPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [deducting, setDeducting] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -26,9 +29,9 @@ const EnrolledUsersPage = () => {
         try {
             setLoading(true);
             const res = await api.get("/users");
-            // The API returns { users: ["name1", "name2"], total_count: 2 }
+            // The API returns { users: [{username: "name1", attendance: 100, blocked: false}, ...], total_count: 2 }
             if (res.data && Array.isArray(res.data.users)) {
-                setUsers(res.data.users.map((username: string) => ({ username })));
+                setUsers(res.data.users);
             }
         } catch (error) {
             toast.error("Failed to fetch users");
@@ -58,6 +61,23 @@ const EnrolledUsersPage = () => {
         }
     };
 
+    const handleDeductAttendance = async () => {
+        try {
+            setDeducting(true);
+            const res = await api.post("/attendance/deduct");
+            if (res.data.success) {
+                toast.success(res.data.message);
+                // Refresh list
+                fetchUsers();
+            }
+        } catch (error) {
+            toast.error("Failed to deduct attendance");
+            console.error(error);
+        } finally {
+            setDeducting(false);
+        }
+    };
+
     const filteredUsers = users.filter((u) =>
         u.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -74,10 +94,23 @@ const EnrolledUsersPage = () => {
                         Manage and view all users currently enrolled in the face recognition database.
                     </p>
                 </div>
-                <Badge variant="outline" className="px-4 py-2 text-sm bg-secondary/20">
-                    <Shield className="w-4 h-4 mr-2 text-primary" />
-                    {users.length} Total Users
-                </Badge>
+                <div className="flex gap-2">
+                    <Button
+                        variant="secondary"
+                        onClick={handleDeductAttendance}
+                        disabled={deducting}
+                        className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+                    >
+                        {deducting ? (
+                            <div className="w-4 h-4 mr-2 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                        ) : null}
+                        Deduct Absences (2%)
+                    </Button>
+                    <Badge variant="outline" className="px-4 py-2 text-sm bg-secondary/20">
+                        <Shield className="w-4 h-4 mr-2 text-primary" />
+                        {users.length} Total Users
+                    </Badge>
+                </div>
             </div>
 
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
@@ -114,6 +147,8 @@ const EnrolledUsersPage = () => {
                                     <thead className="text-xs uppercase bg-secondary/30 text-muted-foreground uppercase border-b border-border/50">
                                         <tr>
                                             <th className="px-6 py-4 font-medium">User Identity</th>
+                                            <th className="px-6 py-4 font-medium">Status</th>
+                                            <th className="px-6 py-4 font-medium">Attendance</th>
                                             <th className="px-6 py-4 font-medium text-right">Actions</th>
                                         </tr>
                                     </thead>
@@ -127,10 +162,22 @@ const EnrolledUsersPage = () => {
                                                 className="border-b border-border/50 bg-background/30 hover:bg-muted/30 transition-colors"
                                             >
                                                 <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${user.blocked ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'}`}>
                                                         {user.username.charAt(0).toUpperCase()}
                                                     </div>
                                                     {user.username}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {user.blocked ? (
+                                                        <Badge variant="destructive" className="bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20">Blocked</Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20">Active</Badge>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 font-medium">
+                                                    <span className={user.attendance < 75 ? "text-destructive" : user.attendance < 90 ? "text-yellow-500" : "text-green-500"}>
+                                                        {user.attendance}%
+                                                    </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <Button

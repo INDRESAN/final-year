@@ -7,6 +7,7 @@ DB = "db.npy"
 CLEAN_DB = "clean_db.npy"
 LOCK_FILE = "enrollment.lock"
 ADMIN_FILE = "admin_creds.json"
+METADATA_FILE = "users_metadata.json"
 
 # Default admin credentials (CHANGE THESE!)
 DEFAULT_ADMIN = {
@@ -107,3 +108,33 @@ def unlock_enrollment():
         os.remove(LOCK_FILE)
         return True
     return False
+
+def load_metadata():
+    if os.path.exists(METADATA_FILE):
+        try:
+            with open(METADATA_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_metadata(metadata):
+    with open(METADATA_FILE, "w") as f:
+        json.dump(metadata, f, indent=4)
+
+def init_user_metadata(username):
+    metadata = load_metadata()
+    if username not in metadata:
+        metadata[username] = {
+            "attendance": 100,
+            "blocked": False,
+            "last_verified_date": None
+        }
+        save_metadata(metadata)
+
+def update_user_metadata(username, updates):
+    metadata = load_metadata()
+    if username in metadata:
+        for k, v in updates.items():
+            metadata[username][k] = v
+        save_metadata(metadata)
